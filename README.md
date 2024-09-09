@@ -20,10 +20,10 @@ Note that, our code is based on [Yolo-V3](https://github.com/ultralytics/yolov3)
 
 Dowdload the YOLO-V3 weight from [https://github.com/ultralytics/yolov3/releases/download/v9.5.0/yolov3.pt](https://github.com/ultralytics/yolov3/releases/download/v9.5.0/yolov3.pt) and put it into src folder.
 
-The generalized object EFE weight and finetuned EFE weight for car is coming soon.
+The generalized object EFE weight and finetuned EFE weight for car are coming soon.
 
 ## Dataset:
-The dataset for adversarial camouflage generation can get [here](https://pan.baidu.com/s/13JvV0iOJs497iWsswQiqPA?pwd=cu1j)
+The latest dataset for adversarial camouflage generation can get [here](https://pan.baidu.com/s/13JvV0iOJs497iWsswQiqPA?pwd=cu1j)
 
 
 ## Run:
