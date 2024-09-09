@@ -11,9 +11,11 @@ Adversarial camouflage is a widely used physical attack against vehicle detector
 ![pipeline](https://github.com/zhoujiawei3/RAUCA-E2E/blob/main/assets/pipeline.png)
 The overview of RAUCA. First, a multi-weather dataset is created using CARLA, which includes car images, corresponding mask images, and camera angles. Then the car images are segmented using the mask images to obtain the foreground car and background images. The foreground car, together with the 3D model and the camera angle is passed through the E2E-NRP rendering component for rendering. The rendered image is then seamlessly integrated with the background. After a series of random output augmentation transformations, the image is then fed into the object detector. Finally, we optimize the adversarial camouflage through back-propagation with our devised loss function computed from the output of the object detector.
 
-before you running the code, you must install the `neural renderer` python package. You can pull Our implementation [here](https://github.com/winterwindwang/neural_renderer), which  is capable of end-to-end optimization of the UV map with improved sampling technique from the UV map to a facet-based tensor.
 
 ## Requirements:
+before you running the code, you must install the `neural renderer` python package. You can pull Our implementation [here](https://github.com/zhoujiawei3/neural_renderer), which  is capable of end-to-end optimization of the UV map with improved sampling technique from the UV map to a facet-based tensor.
+
+
 other requirements are listed in src/requirements.txt
 
 Note that, our code is based on [Yolo-V3](https://github.com/ultralytics/yolov3) implementation.
