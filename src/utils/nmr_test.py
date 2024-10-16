@@ -50,13 +50,13 @@ def get_params(carlaTcam, carlaTveh,model='car'):  # carlaTcam: tuple of 2*3
     pitch = math.radians(carlaTcam[1][0])
     yaw = math.radians(carlaTcam[1][1])
     roll = math.radians(carlaTcam[1][2])
-    # 需不需要确定下范围？？？
+    # ？？？
     cam_direct = [math.cos(pitch) * math.cos(yaw), math.cos(pitch) * math.sin(yaw), math.sin(pitch)]
     cam_up = [math.cos(math.pi / 2 + pitch) * math.cos(yaw), math.cos(math.pi / 2 + pitch) * math.sin(yaw),
               math.sin(math.pi / 2 + pitch)]
 
-    # 如果物体也有旋转，则需要调整相机位置和角度，和物体旋转方式一致
-    # 先实现最简单的绕Z轴旋转
+    # ，，
+    # Z
     p_cam = eye
     p_dir = [eye[0] + cam_direct[0], eye[1] + cam_direct[1], eye[2] + cam_direct[2]]
     p_up = [eye[0] + cam_up[0], eye[1] + cam_up[1], eye[2] + cam_up[2]]

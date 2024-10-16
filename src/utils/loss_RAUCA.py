@@ -46,12 +46,12 @@
 #     # Compute losses
 #     def __init__(self, model, autobalance=False):
 #         super(ComputeLoss, self).__init__()
-#         device = next(model.parameters()).device  # get model device  next(model.parameters())可以获得模型的第一个参数
+#         device = next(model.parameters()).device  # get model device  next(model.parameters())
 #         h = model.hyp  # hyperparameters 
 
 #         # Define criteria
-#         BCEcls = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([h['cls_pw']], device=device)) #定义了二元交叉熵损失函数， cls_pw是分类问题的正样本权重（用来控制不均匀数据）只是定义还没有用
-#         BCEobj = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([h['obj_pw']], device=device))#定义了二元交叉熵损失函数， cls_pw是obj问题的正样本权重（用来控制不均匀数据）只是定义还没有用
+#         BCEcls = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([h['cls_pw']], device=device)) #， cls_pw（）
+#         BCEobj = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([h['obj_pw']], device=device))#， cls_pwobj（）
 
 #         # Class label smoothing https://arxiv.org/pdf/1902.04103.pdf eqn 3
 #         self.cp, self.cn = smooth_BCE(eps=h.get('label_smoothing', 0.0))  # positive, negative BCE targets
@@ -59,9 +59,9 @@
 #         # Focal loss
 #         g = h['fl_gamma']  # focal loss gamma
 #         if g > 0:
-#             BCEcls, BCEobj = FocalLoss(BCEcls, g), FocalLoss(BCEobj, g) #只是定义还没有用 用了正类权重
+#             BCEcls, BCEobj = FocalLoss(BCEcls, g), FocalLoss(BCEobj, g) # 
 
-#         det = model.module.model[-1] if is_parallel(model) else model.model[-1]  # Detect() module 如果是并行模型，那么就要靠模型的model.module就是指定模型的主模型，model.module.model就是指模型的分层结构，最后一层就是检测层
+#         det = model.module.model[-1] if is_parallel(model) else model.model[-1]  # Detect() module ，model.module，model.module.model，
 #         self.balance = {3: [4.0, 1.0, 0.4]}.get(det.nl, [4.0, 1.0, 0.25, 0.06, .02])  # P3-P7
 #         self.ssi = list(det.stride).index(16) if autobalance else 0  # stride 16 index
 #         self.BCEcls, self.BCEobj, self.gr, self.hyp, self.autobalance = BCEcls, BCEobj, model.gr, h, autobalance
@@ -84,7 +84,7 @@
 
 #             n = b.shape[0]  # number of targets
 #             if n:
-#                 ps = pi[b, a, gj, gi]  # prediction subset corresponding to targets  目标对应的预测子集
+#                 ps = pi[b, a, gj, gi]  # prediction subset corresponding to targets  
 
 #                 # Regression
 #                 pxy = ps[:, :2].sigmoid() * 2. - 0.5
@@ -118,19 +118,19 @@
 #         return loss * bs, torch.cat((lbox, lobj, lcls, loss)).detach()
 
 #     def build_targets(self, p, targets):
-#         # Build targets for compute_loss(), input targets(image,class,x,y,w,h) torch.Size([nt, 6]) (6分别是第几张图类别，四个坐标)
+#         # Build targets for compute_loss(), input targets(image,class,x,y,w,h) torch.Size([nt, 6]) (6，)
 #         na, nt = self.na, targets.shape[0]  # number of anchors, targets
 #         tcls, tbox, indices, anch = [], [], [], []
-# #         "normalized to gridspace gain" 是一个相对于网格空间增益进行归一化的概念。
+# #         "normalized to gridspace gain" 。
 
-# # 在目标检测任务中，通常将输入图像划分为一个个网格（grid），每个网格被用作特征提取和目标预测的基本单位。在一些检测模型中，目标的预测可能会受到不同尺度的网格的影响，而这些尺度之间的比例关系可能需要进行统一或归一化。
+# # ，（grid），。，，。
 
-# # "normalized to gridspace gain" 可能是指通过对每个网格预测的结果进行归一化，以保持不同尺度的预测对目标检测结果的贡献相对均衡。这种归一化可以通过调整目标检测模型中的某些权重或参数来实现。
+# # "normalized to gridspace gain" ，。。
 
-# # 具体来说，"normalized to gridspace gain" 可能是指在目标检测模型中对每个网格预测结果进行缩放或加权，以便更好地平衡不同尺度的目标检测结果。这样可以确保在整个图像上进行目标检测时，不同尺度的目标都能得到适当的关注和处理。
+# # ，"normalized to gridspace gain" ，。，。
 #         gain = torch.ones(7, device=targets.device)  # normalized to gridspace gain
-#         ai = torch.arange(na, device=targets.device).float().view(na, 1).repeat(1, nt)  # same as .repeat_interleave(nt) arange（）生成一个0到na-1的张量
-#         targets = torch.cat((targets.repeat(na, 1, 1), ai[:, :, None]), 2)  # append anchor indices ， (targets.repeat(na, 1, 1)变成 targets(image,class,x,y,w,h) cat是按照维度拼接，最后的结果就是torch.size(na,nt,7) 比原来的6多了一个可能锚点权重的感觉
+#         ai = torch.arange(na, device=targets.device).float().view(na, 1).repeat(1, nt)  # same as .repeat_interleave(nt) arange（）0na-1
+#         targets = torch.cat((targets.repeat(na, 1, 1), ai[:, :, None]), 2)  # append anchor indices ， (targets.repeat(na, 1, 1) targets(image,class,x,y,w,h) cat，torch.size(na,nt,7) 6
 
 #         g = 0.5  # bias
 #         off = torch.tensor([[0, 0],
@@ -237,16 +237,16 @@ class ComputeLoss:
         BCEobj = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([h['obj_pw']], device=device))
 
         # Class label smoothing https://arxiv.org/pdf/1902.04103.pdf eqn 3
-        self.cp, self.cn = smooth_BCE(eps=h.get('label_smoothing', 0.0))  # positive, negative BCE targets 为了避免过拟合 而去平滑分类结果，这里不用平滑
+        self.cp, self.cn = smooth_BCE(eps=h.get('label_smoothing', 0.0))  # positive, negative BCE targets  ，
 
         # Focal loss
-        g = h['fl_gamma']  # focal loss gamma 这里也是0 不需要进行和这个操作
+        g = h['fl_gamma']  # focal loss gamma 0 
         if g > 0:
             BCEcls, BCEobj = FocalLoss(BCEcls, g), FocalLoss(BCEobj, g)
 
         det = model.module.model[-1] if is_parallel(model) else model.model[-1]  # Detect() module
-        self.balance = {3: [4.0, 1.0, 0.4]}.get(det.nl, [4.0, 1.0, 0.25, 0.06, .02])  # P3-P7 和不同尺寸的特征图的obj权重 nl是检测器特征层数 {3: [4.0, 1.0, 0.4]}表示一个包含一个键值对的字典，其中键为3，值为列表[4.0, 1.0, 0.4]。.get(det.nl, [4.0, 1.0, 0.25, 0.06, .02])表示从该字典中获取特定键det.nl的值，如果该键不存在，则返回默认值[4.0, 1.0, 0.25, 0.06, .02]
-        self.ssi = list(det.stride).index(16) if autobalance else 0  # stride 16 index 自动平衡算法的起始位置 这里也不采用
+        self.balance = {3: [4.0, 1.0, 0.4]}.get(det.nl, [4.0, 1.0, 0.25, 0.06, .02])  # P3-P7 obj nl {3: [4.0, 1.0, 0.4]}，3，[4.0, 1.0, 0.4]。.get(det.nl, [4.0, 1.0, 0.25, 0.06, .02])det.nl，，[4.0, 1.0, 0.25, 0.06, .02]
+        self.ssi = list(det.stride).index(16) if autobalance else 0  # stride 16 index  
         self.BCEcls, self.BCEobj, self.gr, self.hyp, self.autobalance = BCEcls, BCEobj, model.gr, h, autobalance
         if model_type=='attack_plane':
             self.type_number=4
@@ -254,7 +254,7 @@ class ComputeLoss:
             self.type_number=8
         else:
             self.type_number=2
-        for k in 'na', 'nc', 'nl', 'anchors': #锚框数量、类别数量、特征图数量和锚框尺寸[3,3,2]一个grid 3个特征图，共3种，长宽
+        for k in 'na', 'nc', 'nl', 'anchors': #、、[3,3,2]grid 3，3，
             setattr(self, k, getattr(det, k))
 
     def __call__(self, p, targets):  # predictions, targets, model
@@ -273,7 +273,7 @@ class ComputeLoss:
 
         tbox=targets[:,2:6].unsqueeze(1).repeat( 1,numberAnchor, 1)
         iou = bbox_iou_RAUCA_loss(pbox_squeeze.transpose(1,2), tbox, x1y1x2y2=False, CIoU=True).unsqueeze(2)   # iou(prediction, target)
-        #iou大于0.5变为1，小于0.5变为0
+        #iou0.51，0.50
 
         #result = torch.where(iou > 0.5, torch.tensor(1), torch.tensor(0))
         #c=torch.max(iou)
@@ -299,7 +299,7 @@ class ComputeLoss:
 
         # tbox=targets[:,2:6].repeat( numberAnchor, 1)
         # iou = bbox_iou(pbox_squeeze.T, tbox, x1y1x2y2=False, CIoU=True).unsqueeze(0).unsqueeze(2)   # iou(prediction, target)
-        # #iou大于0.5变为1，小于0.5变为0
+        # #iou0.51，0.50
 
         # #result = torch.where(iou > 0.5, torch.tensor(1), torch.tensor(0))
         # #c=torch.max(iou)
@@ -312,19 +312,19 @@ class ComputeLoss:
         # return loss_real
     def build_targets(self, p, targets):
         # Build targets for compute_loss(), input targets(image,class,x,y,w,h)
-        na, nt = self.na, targets.shape[0]  # number of anchors, targets，一个图中有几个框
+        na, nt = self.na, targets.shape[0]  # number of anchors, targets，
         tcls, tbox, indices, anch = [], [], [], []
-        gain = torch.ones(7, device=targets.device)  # normalized to gridspace gain，为框
+        gain = torch.ones(7, device=targets.device)  # normalized to gridspace gain，
         ai = torch.arange(na, device=targets.device).float().view(na, 1).repeat(1, nt)  # same as .repeat_interleave(nt)
         targets = torch.cat((targets.repeat(na, 1, 1), ai[:, :, None]), 2)  # append anchor indices
-        # 为扩充标记的box添加偏置，具体扩充规则为在下边
+        # box，
         g = 0.5  # bias
         off = torch.tensor([[0, 0],
                             # [1, 0], [0, 1], [-1, 0], [0, -1],  # j,k,l,m
                             # [1, 1], [1, -1], [-1, 1], [-1, -1],  # jk,jm,lk,lm
                             ], device=targets.device).float() * g  # offsets
 
-        for i in range(self.nl): #对每个尺寸的特征图都这样做
+        for i in range(self.nl): #
             anchors,shape = self.anchors[i],p[i].shape
             # tensor([ 1.,  1., 80., 80., 80., 80.,  1.], device='cuda:0')
             gain[2:6] = torch.tensor(p[i].shape)[[3, 2, 3, 2]]  # xyxy gain
@@ -333,8 +333,8 @@ class ComputeLoss:
             t = targets * gain
             if nt:
                 # Matches
-                r = t[:, :, 4:6] / anchors[:, None]  # wh ratio 一个label在一个尺寸特征图下不同猫框的比例
-                j = torch.max(r, 1. / r).max(2)[0] < self.hyp['anchor_t']  # compare 比较是否大于猫框和检测结果是否阈值
+                r = t[:, :, 4:6] / anchors[:, None]  # wh ratio label
+                j = torch.max(r, 1. / r).max(2)[0] < self.hyp['anchor_t']  # compare 
                 # j = wh_iou(anchors, t[:, 4:6]) > model.hyp['iou_t']  # iou(3,n)=wh_iou(anchors(3,2), gwh(n,2))
                 t = t[j]  # filter
 
@@ -361,7 +361,7 @@ class ComputeLoss:
             a = t[:, 6].long()  # anchor indices
             
             indices.append((b, a, gj.clamp_(0, shape[2] - 1), gi.clamp_(0, shape[3] - 1)))  # image, anchor, grid indices
-            tbox.append(torch.cat((gxy - gij, gwh), 1))  # box (实际上是框内的偏移量（格子数）和宽高（格子数）)
+            tbox.append(torch.cat((gxy - gij, gwh), 1))  # box (（）（）)
             anch.append(anchors[a])  # anchors
             tcls.append(c)  # class
 

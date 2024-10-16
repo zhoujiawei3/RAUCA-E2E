@@ -34,21 +34,21 @@ from itertools import chain
 logger = None
 
 def cal_texture(texture_param, texture_origin, texture_mask, texture_content=None, CONTENT=False,):
-    # 计算纹理
+    # 
     if CONTENT:
         textures = 0.5 * (torch.nn.Tanh()(texture_content) + 1)
     else:
-        textures = 0.5 * (torch.nn.Tanh()(texture_param) + 1)# torch.nn.Tanh()()双曲正切函数，结果让纹理的参数在-1到1，加一乘0.5是让他在0-1之间
-    return texture_origin * (1 - texture_mask) + texture_mask * textures  #这里让纹理参数作用到掩码为1的位置上，加上前面哪项，是让剩余不想被对抗性纹理影响的点是原来图像的面片
+        textures = 0.5 * (torch.nn.Tanh()(texture_param) + 1)# torch.nn.Tanh()()，-11，0.50-1
+    return texture_origin * (1 - texture_mask) + texture_mask * textures  #1，，
 
 def calculate_inverse_ratio(masks):
-    # 计算每个掩码图像中非零像素点的数量
+    # 
     nonzero_counts = torch.sum(masks != 0, dim=(1, 2), dtype=torch.float)
 
-    # 计算总像素点数
+    # 
     total_pixels = masks.size(1) * masks.size(2)
 
-    # 计算非零像素点在总像素点数的比例的倒数
+    # 
     inverse_ratios = total_pixels / nonzero_counts
 
     return inverse_ratios
@@ -94,7 +94,7 @@ def train(device,hyp, opt,log_dir,logger,):
 
     tb_writer = None  # init loggers
     if rank in [-1, 0]:
-        print("为什么看不到")
+        print("")
         prefix = colorstr('tensorboard: ')
         text=f"{prefix}Start with 'tensorboard --logdir {opt.project}', view at http://localhost:6006/"
         print(text)
@@ -142,7 +142,7 @@ def train(device,hyp, opt,log_dir,logger,):
 
     # Save run settings
     with open(save_dir / 'hyp.yaml', 'w') as f:
-        yaml.safe_dump(hyp, f, sort_keys=False)  #sort_keys是是否按字母排序，如果false就不会，把hyp写到hyp.yaml里面
+        yaml.safe_dump(hyp, f, sort_keys=False)  #sort_keys，false，hyphyp.yaml
     with open(save_dir / 'opt.yaml', 'w') as f:
         yaml.safe_dump(vars(opt), f, sort_keys=False)
 
@@ -150,7 +150,7 @@ def train(device,hyp, opt,log_dir,logger,):
     
     init_seeds(2 + rank)
     with open(opt.data) as f:
-        data_dict = yaml.safe_load(f)  # data dict #data_dict载入的是carla。yaml
+        data_dict = yaml.safe_load(f)  # data dict #data_dictcarla。yaml
     with open(opt.datatest) as f:
         data_dicttest = yaml.safe_load(f)
 
@@ -163,14 +163,14 @@ def train(device,hyp, opt,log_dir,logger,):
         data_dict = wandb_logger.data_dict
         if wandb_logger.wandb:
             weights, epochs, hyp = opt.weights, opt.epochs, opt.hyp  # WandbLogger might update weights, epochs if resuming
-    #导入数据集的一些参数
+    #
     nc = 1 if opt.single_cls else int(data_dict['nc'])  # number of classes
     names = ['item'] if opt.single_cls and len(data_dict['names']) != 1 else data_dict['names']  # class names
     assert len(names) == nc, '%g names found for nc=%g dataset in %s' % (len(names), nc, opt.data)  # check
 
     # Model
     pretrained = weights.endswith('.pt')
-    with torch_distributed_zero_first(rank):#这一行是只让主进程执行的意思
+    with torch_distributed_zero_first(rank):#
         weights = attempt_download(weights)  # download if not found locally
     ckpt = torch.load(weights, map_location=device) 
     # with torch_distributed_zero_first(rank):
@@ -185,7 +185,7 @@ def train(device,hyp, opt,log_dir,logger,):
     dataloader, dataset,sampler = create_dataloader(train_list, imgsz,device, batch_size, gs,  opt,
                                             hyp=hyp, augment=True, cache=opt.cache_images, rank=rank,
                                             world_size=opt.world_size, workers=opt.workers_train,
-                                            prefix=colorstr('train: '), ret_mask=True)##这一步让数据集中既有图像又有mask
+                                            prefix=colorstr('train: '), ret_mask=True)##mask
     # ---------------------------------#
     # -------Yolo-v3 setting-----------#
     # ---------------------------------#
@@ -201,10 +201,10 @@ def train(device,hyp, opt,log_dir,logger,):
 
     model_NRP=U_Net()
     if opt.zhuanyi:
-        saved_state_dict = torch.load("NRP_weights_no_car_paint/generalized_object_EFE_weight/model_NRP_l51.pth")  # 原始的参数字典
+        saved_state_dict = torch.load("NRP_weights_no_car_paint/generalized_object_EFE_weight/model_NRP_l51.pth")  # 
         new_state_dict = {}
         for k, v in saved_state_dict.items():
-            name = k[7:]  # 去掉 'module.' 前缀
+            name = k[7:]  #  'module.' 
             new_state_dict[name] = v
         saved_state_dict = new_state_dict
         model_NRP.load_state_dict(saved_state_dict)
@@ -248,13 +248,13 @@ def train(device,hyp, opt,log_dir,logger,):
             logger.info(('\n' + '%10s' * 4) % ('Epoch', 'gpu_mem','mloss','loss'))
             if rank in [-1, 0]:
                 pbar = tqdm(pbar, total=nb)  # progress bar
-            #这一步其实就是说明了不需要用这个改变模型参数，而是改变纹理生成的参数也就是 texture_param
+            #， texture_param
             #print(dataloader)
             record_start_all=time.perf_counter()
             # dataset.set_color(epoch)
             # print(f"GPU0:{torch.cuda.memory_reserved() / 1E9}")
             for i, (imgs, texture_img_list, masks,imgs_cut,imgs_NRP_ref_list, targets, paths, _) in pbar:  # batch ------------------------------------------------------------
-                #将训练图像传递给神经网络
+                #
                 # print(f"GPU1:{torch.cuda.memory_reserved() / 1E9}")
                 imgs_cut = imgs_cut.to(device, non_blocking=True).float() / 255.0  # uint8 to float32, 0-255 to 0.0-1.0
 
@@ -286,7 +286,7 @@ def train(device,hyp, opt,log_dir,logger,):
                 output_ref=imgs_NRP_ref_list[0][q]*masks[0]+imgs[0]/ 255.0 *(1-masks[0])
                 # Backward
                 optimizer.zero_grad()
-                loss.backward(retain_graph=False) #retain_graph=True 参数的作用是保留计算图，以便后续可能需要进行额外的反向传播操作，这一步只是为了后续能够访问texture_param.grad
+                loss.backward(retain_graph=False) #retain_graph=True ，，texture_param.grad
                 if epoch_real!=0:
                     optimizer.step()    
                 loss_copy = loss.clone().detach()
@@ -297,19 +297,19 @@ def train(device,hyp, opt,log_dir,logger,):
                 # try:
                 #     if rank in [-1, 0]: 
                 #         if i % 40 == 0:
-                #     # Image.fromarray可以将array变成图像
-                #     # imgs.data.cpu().numpy()[0]这是imgs里面第一张图像，乘255是缩放，np.transpose(..., (1, 2, 0))：将数组的维度从 (C, H, W) 转置为 (H, W, C)，使得通道数（例如 RGB）在数组的最后一个维度。
+                #     # Image.fromarrayarray
+                #     # imgs.data.cpu().numpy()[0]imgs，255，np.transpose(..., (1, 2, 0))： (C, H, W)  (H, W, C)，（ RGB）。
                 #     #     print(np.transpose(imgs.data.cpu().numpy()[0], (1, 2, 0)).astype('uint8').shape)
                 #     #     print(np.transpose(imgs.data.cpu().numpy()[0], (1, 2, 0)).astype('uint8'))
                 #     #     Image.fromarray(np.transpose(imgs.data.cpu().numpy()[0], (1, 2, 0)).astype('uint8')).save(
-                #     #         os.path.join(log_dir, '车辆和渲染图合一.png')) 
-                #     #     print(os.path.join(log_dir, '车辆和渲染图合一.png'))
+                #     #         os.path.join(log_dir, '.png')) 
+                #     #     print(os.path.join(log_dir, '.png'))
                 #     # # image_ref.save(os.path.join(log_dir, 'color_ref.png'))
                 #             Image.fromarray((255 * masks).data.cpu().numpy()[0].astype('uint8')).save(
-                #                 os.path.join(log_dir, '掩码.png'))
+                #                 os.path.join(log_dir, '.png'))
                 #             Image.fromarray(
                 #                 (255 * texture_img_list[q][0]).data.cpu().numpy().transpose((1, 2, 0)).astype('uint8')).save(
-                #                 os.path.join(log_dir, '渲染车.png')) #和上面一个意思，这人非要搞两种
+                #                 os.path.join(log_dir, '.png')) #，
                             
                             
                 #             Image.fromarray(
@@ -326,16 +326,16 @@ def train(device,hyp, opt,log_dir,logger,):
                 #                 os.path.join(log_dir, 'target.png'))
                 #             Image.fromarray(
                 #                     (255*imgs_cut).data.cpu().numpy()[0].transpose((1, 2, 0)).astype('uint8')).save(
-                #                     os.path.join(log_dir, "训练图像切割图像.png"))
+                #                     os.path.join(log_dir, ".png"))
                             
                 #             Image.fromarray(np.transpose(255*imgs_in.data.cpu().numpy(), (1, 2, 0)).astype('uint8')).save(
-                #                 os.path.join(log_dir, '输入原图.png')) 
+                #                 os.path.join(log_dir, '.png')) 
 
                 #             Image.fromarray(np.transpose(255*output.data.cpu().numpy(), (1, 2, 0)).astype('uint8')).save(
-                #                 os.path.join(log_dir, '输出原图.png')) 
+                #                 os.path.join(log_dir, '.png')) 
                             
                 #             Image.fromarray(np.transpose(255*output_ref.data.cpu().numpy(), (1, 2, 0)).astype('uint8')).save(
-                #                 os.path.join(log_dir, '输出ref.png'))
+                #                 os.path.join(log_dir, 'ref.png'))
                     
                 # except:
                 #     pass
@@ -348,8 +348,8 @@ def train(device,hyp, opt,log_dir,logger,):
                     print(f"total_batch_size{total_batch_size}")
                     mloss = (mloss*i*total_batch_size  + loss_copy) / (i*total_batch_size + total_batch_size) 
                     
-                    # update mean losses  loss_items有四个值，box，obj，cls和total
-                    # mloss_same = (mloss_same *j  + loss_copy) / (j + total_batch_size)  # update mean losses  loss_items有四个值，box，obj，cls和total
+                    # update mean losses  loss_items，box，obj，clstotal
+                    # mloss_same = (mloss_same *j  + loss_copy) / (j + total_batch_size)  # update mean losses  loss_items，box，obj，clstotal
                     # print(total_batch_size)
                     # print(loss_copy.data)
                     # print(loss.data)
@@ -357,8 +357,8 @@ def train(device,hyp, opt,log_dir,logger,):
                         
                     mem = '%.3gG' % (torch.cuda.memory_reserved() / 1E9 if torch.cuda.is_available() else 0)  # (GB)
                     s = ('%10s' * 2 +"%10.4f"*2)  % (
-                        '%g/%g' % (epoch_real, number_total), mem,mloss.data,loss_copy.data) #这里打印的就是Epoch gpu_mem那一行，targets.shape[0（打印的labels）]显示的就是每一个batch中训练labels总数
-                        #这里有一个比较奇怪的问题，就是当mloss和loss.data.cpu()存在时，get_item()的时间是0.2，SimpleNRP中的时间是0.1，而如果去掉这两个，那么get_item()的时间是0.3，SimpleNRP中的时间是0.0，这是为什么呢？
+                        '%g/%g' % (epoch_real, number_total), mem,mloss.data,loss_copy.data) #Epoch gpu_mem，targets.shape[0（labels）]batchlabels
+                        #，mlossloss.data.cpu()，get_item()0.2，SimpleNRP0.1，，get_item()0.3，SimpleNRP0.0，？
                     pbar.set_description(s)
             if rank in [-1, 0]: 
                 torch.save(model_NRP.state_dict(), (os.path.join(log_dir, f'model_NRP_l{epoch_real}.pth')))
@@ -381,19 +381,19 @@ def train(device,hyp, opt,log_dir,logger,):
         model_NRP.to(device)
         if opt.zhuanyi:
             if epoch_test==0:
-                saved_state_dict = torch.load("NRP_weights_no_car_paint/generalized_object_EFE_weight/model_NRP_l51.pth")  # 原始的参数字典
+                saved_state_dict = torch.load("NRP_weights_no_car_paint/generalized_object_EFE_weight/model_NRP_l51.pth")  # 
                 new_state_dict = {}
                 for k, v in saved_state_dict.items():
-                    name = k[7:]  # 去掉 'module.' 前缀
+                    name = k[7:]  #  'module.' 
                     new_state_dict[name] = v
                 saved_state_dict = new_state_dict
                 model_NRP.load_state_dict(saved_state_dict)
         if epoch_test!=0:
             path=os.path.join(log_dir,f"model_NRP_l{epoch_test}.pth")
-            saved_state_dict = torch.load(path)  # 原始的参数字典
+            saved_state_dict = torch.load(path)  # 
             new_state_dict = {}
             for k, v in saved_state_dict.items():
-                name = k[7:]  # 去掉 'module.' 前缀
+                name = k[7:]  #  'module.' 
                 new_state_dict[name] = v
             saved_state_dict = new_state_dict
             model_NRP.load_state_dict(saved_state_dict)
@@ -415,13 +415,13 @@ def train(device,hyp, opt,log_dir,logger,):
             # for epoch in range(1, 64+1):
                 
             pbar = enumerate(dataloader_test)
-            # textures = cal_texture(texture_param, texture_origin, texture_mask) #这样就得到了更新完的纹理面片组，这里的texture_mask也是可以更新纹理的面片信息
-            # dataset.set_textures(textures) #这一步可以说非常诡异，把这个纹理片图输入进去，就让数据集中多了texture_img 。masks是在构建数据集的时候就塞进去了，texture_img是贴上了纹理的汽车模型的一定视角的图像
+            # textures = cal_texture(texture_param, texture_origin, texture_mask) #，texture_mask
+            # dataset.set_textures(textures) #，，texture_img 。masks，texture_img
             # logger.info(('\n' + '%10s' * 8) % ('Epoch', 'gpu_mem', 'loss','labels','tex_mean','grad_mean'))
             logger.info(('\n' + '%10s' * 10) % ('Epoch', 'gpu_mem','BCEmloss','BCEloss','MSEmloss','MSEloss','MAEmloss','MAEloss','SSIMmloss','SSIMloss'))
             if rank in [-1, 0]:
                 pbar = tqdm(pbar, total=nb_test)  # progress bar
-            #这一步其实就是说明了不需要用这个改变模型参数，而是改变纹理生成的参数也就是 texture_param
+            #， texture_param
             #print(dataloader)
             # print(f"epoch{epoch}")
             # dataset_test.set_color(epoch)
@@ -431,7 +431,7 @@ def train(device,hyp, opt,log_dir,logger,):
                 # start_first=time.perf_counter()
                 # print(f"dataloader:{end_first-start_first}")
                 
-                #将训练图像传递给神经网络
+                #
                 imgs_cut = imgs_cut.to(device, non_blocking=True).float() / 255.0  # uint8 to float32, 0-255 to 0.0-1.0
                 imgs_in= imgs_cut[0]*masks[0]+imgs[0]*(1-masks[0])/ 255.0 
                 
@@ -447,11 +447,11 @@ def train(device,hyp, opt,log_dir,logger,):
                 tensor2=tensor2.unsqueeze(0)
                 tensor3=torch.clamp(texture_img_list*tensor1+tensor2,0,1)
                 tensor3 = tensor3.transpose(1, 0)
-                #之后的tensor3的shape2，32，3，640，640
+                #tensor3shape2，32，3，640，640
                 masks_enlarge=masks.unsqueeze(1).unsqueeze(2).repeat(1,tensor3.shape[1],tensor3.shape[2],1,1)
                 tensor3=tensor3*masks_enlarge
 
-                #展示所有颜色的渲染图
+                #
                 # if not os.path.exists(os.path.join(log_dir,"tensor3")):
                 #     os.mkdir(os.path.join(log_dir,"tensor3"))
                 # if not os.path.exists(os.path.join(log_dir,"ref")):
@@ -481,7 +481,7 @@ def train(device,hyp, opt,log_dir,logger,):
                 loss_MAE=torch.sum(loss_array_MAE*ratio).data
                 loss_SSIM=torch.zeros(1).to(device)
 
-                # 不使用ratio计算loss
+                # ratioloss
                 loss_BCE_no_ratio=BCE(tensor3,imgs_NRP_ref_list).data
                 loss_MSE_no_ratio=MSE(tensor3,imgs_NRP_ref_list).data
                 loss_MAE_no_ratio=MAE(tensor3,imgs_NRP_ref_list).data
@@ -500,21 +500,21 @@ def train(device,hyp, opt,log_dir,logger,):
                 try:
                     if rank in [-1, 0]: 
                         if i % 40 == 0:
-                            #Image.fromarray可以将array变成图像
-                            #imgs.data.cpu().numpy()[0]这是imgs里面第一张图像，乘255是缩放，np.transpose(..., (1, 2, 0))：将数组的维度从 (C, H, W) 转置为 (H, W, C)，使得通道数（例如 RGB）在数组的最后一个维度。
+                            #Image.fromarrayarray
+                            #imgs.data.cpu().numpy()[0]imgs，255，np.transpose(..., (1, 2, 0))： (C, H, W)  (H, W, C)，（ RGB）。
                                 # print(np.transpose(imgs.data.cpu().numpy()[0], (1, 2, 0)).astype('uint8').shape)
                                 # print(np.transpose(imgs.data.cpu().numpy()[0], (1, 2, 0)).astype('uint8'))
                                 # Image.fromarray(np.transpose(imgs.data.cpu().numpy()[0], (1, 2, 0)).astype('uint8')).save(
-                                #     os.path.join(log_dir, '车辆和渲染图合一.png')) 
-                                # print(os.path.join(log_dir, '车辆和渲染图合一.png'))
+                                #     os.path.join(log_dir, '.png')) 
+                                # print(os.path.join(log_dir, '.png'))
                             # # image_ref.save(os.path.join(log_dir, 'color_ref.png'))
                             # Image.fromarray((255 * masks).data.cpu().numpy()[0].astype('uint8')).save(
-                            #     os.path.join(log_dir, '掩码.png'))
+                            #     os.path.join(log_dir, '.png'))
                             Image.fromarray(
                                 (255 * texture_img).data.cpu().numpy()[0].transpose((1, 2, 0)).astype('uint8')).save(
-                                os.path.join(log_dir, '渲染车_eval.png')) #和上面一个意思，这人非要搞两种
+                                os.path.join(log_dir, '_eval.png')) #，
                             Image.fromarray(np.transpose(255*imgs_in.data.cpu().numpy(), (1, 2, 0)).astype('uint8')).save(
-                                    os.path.join(log_dir, '输入原图_val.png')) 
+                                    os.path.join(log_dir, '_val.png')) 
                             Image.fromarray(
                                 (255 * tensor1).data.cpu().numpy()[0][0].transpose((1, 2, 0)).astype('uint8')).save(
                                 os.path.join(log_dir, 'img_tensor1_val.png'))
@@ -529,34 +529,34 @@ def train(device,hyp, opt,log_dir,logger,):
                             #     os.path.join(log_dir, 'target.png'))
                             # Image.fromarray(
                             #         (255*imgs_cut).data.cpu().numpy()[0].transpose((1, 2, 0)).astype('uint8')).save(
-                            #         os.path.join(log_dir, "训练图像切割图像.png"))
+                            #         os.path.join(log_dir, ".png"))
                             Image.fromarray(np.transpose(255*output.data.cpu().numpy(), (1, 2, 0)).astype('uint8')).save(
-                                os.path.join(log_dir, '输出原图_val.png')) 
+                                os.path.join(log_dir, '_val.png')) 
                             
                             Image.fromarray(np.transpose(255*output_ref.data.cpu().numpy(), (1, 2, 0)).astype('uint8')).save(
-                                os.path.join(log_dir, '输出ref_val.png'))
+                                os.path.join(log_dir, 'ref_val.png'))
                 
                 except:
                     pass
                 
                 if rank in [-1, 0]: 
                     j=i*opt.total_batch_size_test#+(epoch-1)*nb_test*total_batch_size_test
-                    mlossBCE = (mlossBCE *j  + loss_BCE) / (j + opt.total_batch_size_test)  # update mean losses  loss_items有四个值，box，obj，cls和total
-                    mlossMSE = (mlossMSE *j  + loss_MSE) / (j + opt.total_batch_size_test)  # update mean losses  loss_items有四个值，box，obj，cls和total
-                    mlossMAE = (mlossMAE *j  + loss_MAE) / (j + opt.total_batch_size_test)  # update mean losses  loss_items有四个值，box，obj，cls和total
+                    mlossBCE = (mlossBCE *j  + loss_BCE) / (j + opt.total_batch_size_test)  # update mean losses  loss_items，box，obj，clstotal
+                    mlossMSE = (mlossMSE *j  + loss_MSE) / (j + opt.total_batch_size_test)  # update mean losses  loss_items，box，obj，clstotal
+                    mlossMAE = (mlossMAE *j  + loss_MAE) / (j + opt.total_batch_size_test)  # update mean losses  loss_items，box，obj，clstotal
                     mlossSSIM = (mlossSSIM *j  + loss_SSIM) / (j + opt.total_batch_size_test)
 
 
                     k=i*opt.gpus
-                    mlossBCE_no_ratio = (mlossBCE_no_ratio *k  + loss_BCE_no_ratio) / (k + opt.gpus)  # update mean losses  loss_items有四个值，box，obj，cls和total
-                    mlossMSE_no_ratio = (mlossMSE_no_ratio *k  + loss_MSE_no_ratio) / (k + opt.gpus)  # update mean losses  loss_items有四个值，box，obj，cls和total
-                    mlossMAE_no_ratio = (mlossMAE_no_ratio *k  + loss_MAE_no_ratio) / (k + opt.gpus)  # update mean losses  loss_items有四个值，box，obj，cls和total
+                    mlossBCE_no_ratio = (mlossBCE_no_ratio *k  + loss_BCE_no_ratio) / (k + opt.gpus)  # update mean losses  loss_items，box，obj，clstotal
+                    mlossMSE_no_ratio = (mlossMSE_no_ratio *k  + loss_MSE_no_ratio) / (k + opt.gpus)  # update mean losses  loss_items，box，obj，clstotal
+                    mlossMAE_no_ratio = (mlossMAE_no_ratio *k  + loss_MAE_no_ratio) / (k + opt.gpus)  # update mean losses  loss_items，box，obj，clstotal
                     print(mlossMAE_no_ratio)
-                    # update mean losses  loss_items有四个值，box，obj，cls和total
+                    # update mean losses  loss_items，box，obj，clstotal
                     mem = '%.3gG' % (torch.cuda.memory_reserved() / 1E9 if torch.cuda.is_available() else 0)  # (GB)
                     s = ('%10s' * 2 +"%10.4f"*8)  % (
-                        '%g/%g' % (epoch_real,number_total), mem,mlossBCE,loss_BCE,mlossMSE,loss_MSE,mlossMAE,loss_MAE,mlossSSIM,loss_SSIM) #这里打印的就是Epoch gpu_mem那一行，targets.shape[0（打印的labels）]显示的就是每一个batch中训练labels总数
-                    #这里有一个比较奇怪的问题，就是当mloss和loss.data.cpu()存在时，get_item()的时间是0.2，SimpleNRP中的时间是0.1，而如果去掉这两个，那么get_item()的时间是0.3，SimpleNRP中的时间是0.0，这是为什么呢？
+                        '%g/%g' % (epoch_real,number_total), mem,mlossBCE,loss_BCE,mlossMSE,loss_MSE,mlossMAE,loss_MAE,mlossSSIM,loss_SSIM) #Epoch gpu_mem，targets.shape[0（labels）]batchlabels
+                    #，mlossloss.data.cpu()，get_item()0.2，SimpleNRP0.1，，get_item()0.3，SimpleNRP0.0，？
                     pbar.set_description(s)
             if rank in [-1, 0]:  
                 tb_writer.add_scalar(f"Test_BCEMeanloss_{opt.datatype}_no_car_paint", mlossBCE, epoch_test)
@@ -602,7 +602,7 @@ if __name__ == '__main__':
     parser.add_argument('--data', type=str, default='data/NRP_boat.yaml', help='data.yaml path')
     parser.add_argument('--datatest', type=str, default='data/NRP_boat.yaml', help='data.yaml path')
     parser.add_argument('--lr', type=float, default=0.01, help='learning rate for texture_param')
-    parser.add_argument('--obj_file', type=str, default='car_assets/audi_et_te.obj', help='3d car model obj') #3D车模
+    parser.add_argument('--obj_file', type=str, default='car_assets/audi_et_te.obj', help='3d car model obj') #3D
     parser.add_argument('--faces', type=str, default='car_assets/exterior_face.txt',
                         help='exterior_face file  (exterior_face, all_faces)')
     parser.add_argument('--datapath', type=str, default='/CarlaDataset_test_6_1_specific_16viewpoint_train',
@@ -662,7 +662,7 @@ if __name__ == '__main__':
 
     opt = parser.parse_args()
 
-    T = opt.t #这个T是计算平滑损失最后乘的参数，论文中的μ
+    T = opt.t #T，μ
     D1 = opt.d1
     D2 = opt.d2
     lamb = opt.lamb
@@ -688,7 +688,7 @@ if __name__ == '__main__':
     # Set DDP variables
 
 
-    # opt.world_size = int(os.environ['WORLD_SIZE']) if 'WORLD_SIZE' in os.environ else 1  # os.environ[""]获得一个环境变量，world_size是计算任务中有多少个结点
+    # opt.world_size = int(os.environ['WORLD_SIZE']) if 'WORLD_SIZE' in os.environ else 1  # os.environ[""]，world_size
     opt.global_rank = int(os.environ['RANK']) if 'RANK' in os.environ else -1
     # set_logging(opt.global_rank)
     # print(f"rank:{opt.global_rank}")

@@ -357,9 +357,9 @@ class Detections:
                 self.imgs[i] = np.asarray(im)
     def display_ZJW(self, pprint=False, show=False, save=False, crop=False, render=False, save_dir=Path(''),name='result'):
         for i, (im, pred) in enumerate(zip(self.imgs, self.pred)):
-            #打印看im是否为空
+            #im
             if im is not None:
-                # 在这里，你可以安全地访问 im.data
+                # ， im.data
                 print("im is not None")
             else:
                 print("im is None")

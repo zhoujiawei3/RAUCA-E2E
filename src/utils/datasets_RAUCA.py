@@ -325,9 +325,9 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         self.textures_255=textures_255
 
     def __getitem__(self, index):
-        img, (h0, w0), (h, w), (veh_trans, cam_trans) = load_image(self, index) #从原始图像就可以获得车辆角度和相机角度
+        img, (h0, w0), (h, w), (veh_trans, cam_trans) = load_image(self, index) #
         #camera parameters
-        eye, camera_direction, camera_up = nmr.get_params(cam_trans, veh_trans,model=self.model) #因为数据集中的车辆不带旋转，只考虑了相机的位置和角度，相机的位置带了权重，可能是考虑了汽车正则化的原因
+        eye, camera_direction, camera_up = nmr.get_params(cam_trans, veh_trans,model=self.model) #，，，
         # print(f"eye:{eye},camera_direction:{camera_direction},camera_up:{camera_up}")
         # print(f"veh_trans[1]{veh_trans[1]}")
         self.mask_renderer.renderer.renderer.eye = eye
@@ -341,12 +341,12 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         # self.mask_renderer.renderer.renderer.eye = eye
         # render image via neural renderer
 
-        # imgs_ref = self.mask_renderer.forward(self.vertices_var, self.faces_var, self.textures_255)#再根据物体的片图结合之前输入的角度和距离信息就可以得到imgs_pred
+        # imgs_ref = self.mask_renderer.forward(self.vertices_var, self.faces_var, self.textures_255)#imgs_pred
         # # Image.fromarray(np.uint8(255 * imgs_pred.squeeze().cpu().data.numpy().transpose(1, 2, 0))).show()
         
         # imgs_ref = imgs_ref / torch.max(imgs_ref)
 
-        imgs_pred = self.mask_renderer.forward(self.vertices_var, self.faces_var, self.textures)#再根据物体的片图结合之前输入的角度和距离信息就可以得到imgs_pred
+        imgs_pred = self.mask_renderer.forward(self.vertices_var, self.faces_var, self.textures)#imgs_pred
         # Image.fromarray(np.uint8(255 * imgs_pred.squeeze().cpu().data.numpy().transpose(1, 2, 0))).show()
         
         imgs_pred = imgs_pred / torch.max(imgs_pred)
@@ -442,7 +442,7 @@ def load_image(self, index):
     path = sb.join(path.rsplit(sa, 1)).rsplit('.', 1)[0] + '.npz'
     data = np.load(path, allow_pickle=True)  # .item() # .item()      #
     img = data['img']
-    # img = img[:, :, ::-1]  # 列表数组左右翻转
+    # img = img[:, :, ::-1]  # 
     # the relation among veh_trans or cam_trans and img
     veh_trans, cam_trans = data['veh_trans'], data['cam_trans']
     # cam_trans[0][2]-=0.81

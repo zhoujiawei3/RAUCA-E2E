@@ -46,12 +46,12 @@ class ComputeLoss:
     # Compute losses
     def __init__(self, model, autobalance=False):
         super(ComputeLoss, self).__init__()
-        device = next(model.parameters()).device  # get model device  next(model.parameters())可以获得模型的第一个参数
+        device = next(model.parameters()).device  # get model device  next(model.parameters())
         h = model.hyp  # hyperparameters 
 
         # Define criteria
-        BCEcls = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([h['cls_pw']], device=device)) #定义了二元交叉熵损失函数， cls_pw是分类问题的正样本权重（用来控制不均匀数据）只是定义还没有用
-        BCEobj = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([h['obj_pw']], device=device))#定义了二元交叉熵损失函数， cls_pw是obj问题的正样本权重（用来控制不均匀数据）只是定义还没有用
+        BCEcls = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([h['cls_pw']], device=device)) #， cls_pw（）
+        BCEobj = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([h['obj_pw']], device=device))#， cls_pwobj（）
 
         # Class label smoothing https://arxiv.org/pdf/1902.04103.pdf eqn 3
         self.cp, self.cn = smooth_BCE(eps=h.get('label_smoothing', 0.0))  # positive, negative BCE targets
@@ -59,9 +59,9 @@ class ComputeLoss:
         # Focal loss
         g = h['fl_gamma']  # focal loss gamma
         if g > 0:
-            BCEcls, BCEobj = FocalLoss(BCEcls, g), FocalLoss(BCEobj, g) #只是定义还没有用 用了正类权重
+            BCEcls, BCEobj = FocalLoss(BCEcls, g), FocalLoss(BCEobj, g) # 
 
-        det = model.module.model[-1] if is_parallel(model) else model.model[-1]  # Detect() module 如果是并行模型，那么就要靠模型的model.module就是指定模型的主模型，model.module.model就是指模型的分层结构，最后一层就是检测层
+        det = model.module.model[-1] if is_parallel(model) else model.model[-1]  # Detect() module ，model.module，model.module.model，
         self.balance = {3: [4.0, 1.0, 0.4]}.get(det.nl, [4.0, 1.0, 0.25, 0.06, .02])  # P3-P7
         self.ssi = list(det.stride).index(16) if autobalance else 0  # stride 16 index
         self.BCEcls, self.BCEobj, self.gr, self.hyp, self.autobalance = BCEcls, BCEobj, model.gr, h, autobalance
@@ -84,7 +84,7 @@ class ComputeLoss:
 
             n = b.shape[0]  # number of targets
             if n:
-                ps = pi[b, a, gj, gi]  # prediction subset corresponding to targets  目标对应的预测子集
+                ps = pi[b, a, gj, gi]  # prediction subset corresponding to targets  
 
                 # Regression
                 pxy = ps[:, :2].sigmoid() * 2. - 0.5
@@ -118,19 +118,19 @@ class ComputeLoss:
         return loss * bs, torch.cat((lbox, lobj, lcls, loss)).detach()
 
     def build_targets(self, p, targets):
-        # Build targets for compute_loss(), input targets(image,class,x,y,w,h) torch.Size([nt, 6]) (6分别是第几张图类别，四个坐标)
+        # Build targets for compute_loss(), input targets(image,class,x,y,w,h) torch.Size([nt, 6]) (6，)
         na, nt = self.na, targets.shape[0]  # number of anchors, targets
         tcls, tbox, indices, anch = [], [], [], []
-#         "normalized to gridspace gain" 是一个相对于网格空间增益进行归一化的概念。
+#         "normalized to gridspace gain" 。
 
-# 在目标检测任务中，通常将输入图像划分为一个个网格（grid），每个网格被用作特征提取和目标预测的基本单位。在一些检测模型中，目标的预测可能会受到不同尺度的网格的影响，而这些尺度之间的比例关系可能需要进行统一或归一化。
+# ，（grid），。，，。
 
-# "normalized to gridspace gain" 可能是指通过对每个网格预测的结果进行归一化，以保持不同尺度的预测对目标检测结果的贡献相对均衡。这种归一化可以通过调整目标检测模型中的某些权重或参数来实现。
+# "normalized to gridspace gain" ，。。
 
-# 具体来说，"normalized to gridspace gain" 可能是指在目标检测模型中对每个网格预测结果进行缩放或加权，以便更好地平衡不同尺度的目标检测结果。这样可以确保在整个图像上进行目标检测时，不同尺度的目标都能得到适当的关注和处理。
+# ，"normalized to gridspace gain" ，。，。
         gain = torch.ones(7, device=targets.device)  # normalized to gridspace gain
-        ai = torch.arange(na, device=targets.device).float().view(na, 1).repeat(1, nt)  # same as .repeat_interleave(nt) arange（）生成一个0到na-1的张量
-        targets = torch.cat((targets.repeat(na, 1, 1), ai[:, :, None]), 2)  # append anchor indices ， (targets.repeat(na, 1, 1)变成 targets(image,class,x,y,w,h) cat是按照维度拼接，最后的结果就是torch.size(na,nt,7) 比原来的6多了一个可能锚点权重的感觉
+        ai = torch.arange(na, device=targets.device).float().view(na, 1).repeat(1, nt)  # same as .repeat_interleave(nt) arange（）0na-1
+        targets = torch.cat((targets.repeat(na, 1, 1), ai[:, :, None]), 2)  # append anchor indices ， (targets.repeat(na, 1, 1) targets(image,class,x,y,w,h) cat，torch.size(na,nt,7) 6
 
         g = 0.5  # bias
         off = torch.tensor([[0, 0],

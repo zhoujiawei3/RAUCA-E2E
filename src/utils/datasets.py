@@ -405,7 +405,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         # Read cache
         # cache.pop('hash')  # remove hash
         # cache.pop('version')  # remove version
-        [cache.pop(k) for k in ('hash', 'version')] #这里删掉了msgs
+        [cache.pop(k) for k in ('hash', 'version')] #msgs
         labels, shapes, self.segments = zip(*cache.values())
         self.labels = list(labels)
         self.shapes = np.array(shapes, dtype=np.float64)
@@ -416,7 +416,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                 x[:, 0] = 0
 
         n = len(shapes)  # number of images
-        bi = np.floor(np.arange(n) / batch_size).astype(int)  # batch index #把int变成了int
+        bi = np.floor(np.arange(n) / batch_size).astype(int)  # batch index #intint
         nb = bi[-1] + 1  # number of batches
         self.batch = bi  # batch index of image
         self.n = n
@@ -444,7 +444,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                 elif mini > 1:
                     shapes[i] = [1, 1 / mini]
 
-            self.batch_shapes = np.ceil(np.array(shapes) * img_size / stride + pad).astype(int) * stride #把int改成了int
+            self.batch_shapes = np.ceil(np.array(shapes) * img_size / stride + pad).astype(int) * stride #intint
 
         # Cache images into memory for faster training (WARNING: large datasets may exceed system RAM)
         self.imgs = [None] * n

@@ -74,10 +74,10 @@ def create_dataloader(path, imgsz,device, batch_size, stride,opt, hyp=None, augm
                                       prefix=prefix, mask_dir=mask_dir, ret_mask=ret_mask, phase=phase)
 
     batch_size = min(batch_size, len(dataset))
-    # nw = min([os.cpu_count() // world_size, batch_size if batch_size > 1 else 0, workers])  # number of workers os.cpu_count()返回系统中可用的CPU核心总数，world_size表示进程或线程的数量。
+    # nw = min([os.cpu_count() // world_size, batch_size if batch_size > 1 else 0, workers])  # number of workers os.cpu_count()CPU，world_size。
     nw = min([os.cpu_count() // world_size, workers])
-    sampler = torch.utils.data.distributed.DistributedSampler(dataset,num_replicas=world_size,rank=rank) if rank != -1 else None #rank=-1就是不需要分布式计算，如果分布式计算就需要使用采样器
-    loader = torch.utils.data.DataLoader if image_weights else InfiniteDataLoader #数据的无限循环
+    sampler = torch.utils.data.distributed.DistributedSampler(dataset,num_replicas=world_size,rank=rank) if rank != -1 else None #rank=-1，
+    loader = torch.utils.data.DataLoader if image_weights else InfiniteDataLoader #
     # Use torch.utils.data.DataLoader() if dataset.properties will update during training else InfiniteDataLoader()
     dataloader = loader(dataset,
                         batch_size=batch_size,
@@ -106,7 +106,7 @@ class InfiniteDataLoader(torch.utils.data.dataloader.DataLoader):
         for i in range(len(self)):
             yield next(self.iterator)
 
-    #这个就是加载数据的线程不会死亡
+    #
 
 
 class _RepeatSampler(object):
@@ -148,10 +148,10 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         self.phase = phase
         try:
             f = []  # image files
-            for p in path if isinstance(path, list) else [path]: #可以传入一个列表来载入图像
+            for p in path if isinstance(path, list) else [path]: #
                 p = Path(p)  # os-agnostic
                 if p.is_dir():  # dir
-                    f += glob.glob(str(p / '**' / '*.*'), recursive=True) #把p路径下所有文件和子目录文件路径导入到f列表中
+                    f += glob.glob(str(p / '**' / '*.*'), recursive=True) #pf
                     # f = list(p.rglob('**/*.*'))  # pathlib
                 elif p.is_file():  # file
                     with open(p, 'r') as t:
@@ -161,7 +161,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                         # f += [p.parent / x.lstrip(os.sep) for x in t]  # local to global path (pathlib)
                 else:
                     raise Exception(f'{prefix}{p} does not exist')
-            self.img_files = sorted([x.replace('/', os.sep) for x in f if x.split('.')[-1].lower() in img_formats]) #通过文件拓展名筛选出其中的文件，并且将/和当前操作系统的分割符转换保证通用，最后再按照字母排序
+            self.img_files = sorted([x.replace('/', os.sep) for x in f if x.split('.')[-1].lower() in img_formats]) #，/，
             # self.img_files = sorted([x for x in f if x.suffix[1:].lower() in img_formats])  # pathlib
             assert self.img_files, f'{prefix}No images found'
         except Exception as e:
@@ -194,9 +194,9 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             [cache.pop(k) for k in ('hash', 'version')]  # remove items
         labels, shapes, self.segments = zip(*cache.values())
         self.labels = list(labels)  #
-        self.shapes = np.array(shapes, dtype=np.float64) #每张图像的尺寸的一个turple，有数据集个数的元素，每个元素是[800,800]，即[[800,800],...]
+        self.shapes = np.array(shapes, dtype=np.float64) #turple，，[800,800]，[[800,800],...]
         # print(f"shapes:{self.shapes}")
-        self.img_files = list(cache.keys())  # update  形如['/data/zhoujw/upload_NSR/train_new/data10.png', '/data/zhoujw/upload_NSR/train_new/data100.png', '/data/zhoujw/upload_NSR/train_new/data1000.png'...]
+        self.img_files = list(cache.keys())  # update  ['/data/zhoujw/upload_NSR/train_new/data10.png', '/data/zhoujw/upload_NSR/train_new/data100.png', '/data/zhoujw/upload_NSR/train_new/data1000.png'...]
         self.label_files = img2label_paths(cache.keys())  # update
         if single_cls:
             for x in self.labels:
@@ -204,7 +204,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
 
         n = len(shapes)  # number of images
         
-        bi = np.floor(np.arange(n) / batch_size).astype(int)  # batch index  把[0,1,2,3,4,5..]变为[0,0,0,1,1,1,2,2,2..]如果batch_size为3
+        bi = np.floor(np.arange(n) / batch_size).astype(int)  # batch index  [0,1,2,3,4,5..][0,0,0,1,1,1,2,2,2..]batch_size3
         nb = bi[-1] + 1  # number of batches
         self.batch = bi  # batch index of image
         self.n = n
@@ -212,7 +212,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
 
         # Rectangular Training
         if self.rect:
-            # Sort by aspect ratio ,本数据集下没什么变化
+            # Sort by aspect ratio ,
             s = self.shapes  # wh
             ar = s[:, 1] / s[:, 0]  # aspect ratio
             irect = ar.argsort()
@@ -353,10 +353,10 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                 mask = cv2.imread(mask_file)
                 mask = cv2.resize(mask, (self.img_size, self.img_size))
 
-                mask = np.logical_or(mask[:, :, 0], mask[:, :, 1], mask[:, :, 2]) #逻辑或合成单通道
+                mask = np.logical_or(mask[:, :, 0], mask[:, :, 1], mask[:, :, 2]) #
                 mask = torch.from_numpy(mask.astype('float32')).to(self.device)
         
-            img, (h0, w0), (h, w), (veh_trans, cam_trans),path = load_image(self, index) #从原始图像就可以获得车辆角度和相机角度
+            img, (h0, w0), (h, w), (veh_trans, cam_trans),path = load_image(self, index) #
             length=math.sqrt(cam_trans[0][0]**2+
                                             cam_trans[0][1]**2+
                                             cam_trans[0][2]**2)
@@ -375,11 +375,11 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                 imgs_pred = cv2.imread(neural_img_file_path)
                 imgs_pred =cv2.cvtColor(imgs_pred,cv2.COLOR_BGR2RGB)
                 imgs_pred=torch.from_numpy(np.array(imgs_pred)).unsqueeze(0)
-                imgs_pred=imgs_pred.to(self.device, non_blocking=True).float() / 255.0  # uint8 to float32, 0-255 to 0.0-1.0 non_blocking是异步数据传输，提高效率
+                imgs_pred=imgs_pred.to(self.device, non_blocking=True).float() / 255.0  # uint8 to float32, 0-255 to 0.0-1.0 non_blocking，
                 imgs_pred = imgs_pred.permute(0,3,1,2)
                 imgs_pred=mask*imgs_pred
                 render_image_list.append(imgs_pred.squeeze(0))
-            #变成张
+            #
             render_image_list=torch.stack(render_image_list, 0)
             
             # Letterbox
@@ -388,8 +388,8 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             img, ratio, pad = letterbox(img, shape, auto=False, scaleup=self.augment)
             shapes = (h0, w0), ((h / h0, w / w0), pad)  # for COCO mAP rescaling
 
-            labels = self.labels[index].copy() #这样做保证不更改原来的内容
-            #这部分是要解决图像变成正方形，之后label坐标发生变化的问题
+            labels = self.labels[index].copy() #
+            #，label
             
 
             if labels.size:  # normalized xywh to pixel xyxy format
@@ -405,7 +405,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             # Convert
             
             img = img.transpose((2, 0, 1))[::-1]  # HWC to CHW, BGR to RGB
-            img = np.ascontiguousarray(img) #转换为内存连续的数组
+            img = np.ascontiguousarray(img) #
             img = torch.from_numpy(img).to(self.device)
             
             img_cut=( img) * mask
@@ -433,7 +433,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                 image_ref =cv2.cvtColor(image_ref,cv2.COLOR_BGR2RGB)
             # image_ref =Image.open(color_ref_path).convert("RGB")
                 image_ref_tensor=torch.from_numpy(np.array(image_ref)).unsqueeze(0)
-                image_NSR_ref =image_ref_tensor.to(self.device, non_blocking=True).float() / 255.0  # uint8 to float32, 0-255 to 0.0-1.0 non_blocking是异步数据传输，提高效率
+                image_NSR_ref =image_ref_tensor.to(self.device, non_blocking=True).float() / 255.0  # uint8 to float32, 0-255 to 0.0-1.0 non_blocking，
                 image_NSR_ref = image_NSR_ref.permute(0,3,1,2)
                 image_NSR_ref = image_NSR_ref*mask
                 ref_image_list.append(image_NSR_ref.squeeze(0))
@@ -446,7 +446,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             # image_ref =cv2.cvtColor(image_ref,cv2.COLOR_BGR2RGB)
             # # image_ref =Image.open(color_ref_path).convert("RGB")
             # image_ref_tensor=torch.from_numpy(np.array(image_ref)).unsqueeze(0)
-            # image_NSR_ref =image_ref_tensor.to(self.device, non_blocking=True).float() / 255.0  # uint8 to float32, 0-255 to 0.0-1.0 non_blocking是异步数据传输，提高效率
+            # image_NSR_ref =image_ref_tensor.to(self.device, non_blocking=True).float() / 255.0  # uint8 to float32, 0-255 to 0.0-1.0 non_blocking，
             # image_NSR_ref = image_NSR_ref.permute(0,3,1,2)
             # image_NSR_ref = image_NSR_ref*mask
             
@@ -511,7 +511,7 @@ def load_image(self, index):
     path = sb.join(path.rsplit(sa, 1)).rsplit('.', 1)[0] + '.npz'
     data = np.load(path, allow_pickle=True)  # .item() # .item()      #
     img = data['img']
-    # img = img[:, :, ::-1]  # 列表数组左右翻转
+    # img = img[:, :, ::-1]  # 
     # the relation among veh_trans or cam_trans and img
     veh_trans, cam_trans = data['veh_trans'], data['cam_trans']
     # cam_trans[0][2]-=0.81
@@ -522,7 +522,7 @@ def load_image(self, index):
     if r != 1:  # if sizes are not equal
         img = cv2.resize(img, (int(w0 * r), int(h0 * r)),
                          interpolation=cv2.INTER_AREA if r < 1 and not self.augment else cv2.INTER_LINEAR)
-    return img, (h0, w0), img.shape[:2], (veh_trans, cam_trans),path  # img, hw_original, hw_resized ，h0，w0是原来的大小，h，w是resize成正方形后的大小
+    return img, (h0, w0), img.shape[:2], (veh_trans, cam_trans),path  # img, hw_original, hw_resized ，h0，w0，h，wresize
 
 
 def replicate(img, labels):
